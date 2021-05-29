@@ -7,18 +7,37 @@ interface Theme {
   label: string
 }
 
+let themeChangeInterval: NodeJS.Timeout | null = null
+
 const themes: Theme[] = vscode.extensions.all
   .flatMap((ext) => ext.packageJSON?.contributes?.themes)
   .filter(Boolean)
 
-const settings = vscode.workspace.getConfiguration()
-
+const userSettings = vscode.workspace.getConfiguration()
 async function changeTheme() {
   const themeIndex = Math.floor(Math.random() * Math.floor(themes.length))
   const randomTheme = themes[themeIndex].label
-  await settings.update("workbench.colorTheme", randomTheme, true)
+  await userSettings.update("workbench.colorTheme", randomTheme, true)
   // Display a message box to the user
   vscode.window.showInformationMessage(`Switched to theme: ${randomTheme}!`)
+}
+
+function setThemeChangeInterval() {
+  if (themeChangeInterval) {
+    clearInterval(themeChangeInterval)
+  }
+  const extensionConfig = vscode.workspace.getConfiguration("themeGallery")
+  const useInterval = extensionConfig.get<boolean>("interval")
+  const intervalLength = extensionConfig.get<number>("intervalLength")
+
+  console.log({ useInterval, intervalLength })
+  if (useInterval && intervalLength) {
+    const intervalLengthMs = intervalLength * 1000 * 60
+    console.log({ intervalLengthMs })
+    themeChangeInterval = setInterval(() => {
+      changeTheme()
+    }, intervalLengthMs)
+  }
 }
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -39,9 +58,14 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(disposable)
 
-  setInterval(() => {
-    changeTheme()
-  }, 1000)
+  vscode.workspace.onDidChangeConfiguration((e) => {
+    if (e.affectsConfiguration("themeGallery")) {
+      console.log("Resetting interval")
+      setThemeChangeInterval()
+    }
+  })
+
+  setThemeChangeInterval()
 }
 
 // this method is called when your extension is deactivated

@@ -19,7 +19,20 @@
         "command": "theme-gallery.randomize",
         "title": "Theme Gallery: Randomize Theme"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Theme Gallery",
+      "properties": {
+        "themeGallery.interval": {
+          "type": "boolean",
+          "default": false
+        },
+        "themeGallery.intervalLength": {
+          "type": "number",
+          "default": 10
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "yarn run package",

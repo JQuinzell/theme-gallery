@@ -3,6 +3,7 @@
   "displayName": "Theme Gallery",
   "description": "Manage all of your themes",
   "version": "0.0.1",
+  "publisher": "Quinzell",
   "engines": {
     "vscode": "^1.56.0"
   },

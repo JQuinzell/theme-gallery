@@ -53,6 +53,38 @@ export function activate(context: vscode.ExtensionContext) {
   })
 
   setThemeChangeInterval()
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("theme-gallery.gallery", () => {
+      // Create and show panel
+      const panel = vscode.window.createWebviewPanel(
+        "themeGallery",
+        "Theme Gallry",
+        vscode.ViewColumn.One,
+        {}
+      )
+
+      // And set its HTML content
+      panel.webview.html = getWebviewContent()
+
+      // Cleanup when webview closes
+      // panel.onDidDispose(() => {}, null, context.subscriptions)
+    })
+  )
 }
 
 export function deactivate() {}
+
+function getWebviewContent() {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Gallery</title>
+</head>
+<body>
+    <h1>Theme Gallery</h1>
+</body>
+</html>`
+}

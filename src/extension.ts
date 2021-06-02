@@ -1,4 +1,6 @@
 import * as vscode from "vscode"
+import * as path from "path"
+import { Console } from "console"
 
 interface Theme {
   id?: string
@@ -61,11 +63,24 @@ export function activate(context: vscode.ExtensionContext) {
         "themeGallery",
         "Theme Gallry",
         vscode.ViewColumn.One,
-        {}
+        {
+          // Enable javascript in the webview
+          enableScripts: true,
+
+          // And restrict the webview to only loading content from our extension's `media` directory.
+          localResourceRoots: [
+            vscode.Uri.joinPath(context.extensionUri, "out/compiled"),
+          ],
+        }
       )
 
       // And set its HTML content
-      panel.webview.html = getWebviewContent()
+      panel.webview.html = getWebviewContent(
+        panel.webview,
+        vscode.Uri.joinPath(context.extensionUri, "out/compiled", "main.js")
+      )
+
+      panel.webview.postMessage({ themes })
 
       // Cleanup when webview closes
       // panel.onDidDispose(() => {}, null, context.subscriptions)
@@ -75,16 +90,25 @@ export function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {}
 
-function getWebviewContent() {
+function getWebviewContent(webview: vscode.Webview, scriptUri: vscode.Uri) {
+  const scriptSrc = webview.asWebviewUri(scriptUri)
+  console.log(webview.cspSource)
+  console.log(scriptSrc)
+  const nonce =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".slice(
+      0,
+      32
+    )
   return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Theme Gallery</title>
-</head>
-<body>
-    <h1>Theme Gallery</h1>
-</body>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="Content-Security-Policy" content="img-src https: data:; style-src 'unsafe-inline' ${webview.cspSource}; script-src 'nonce-${nonce}';">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Theme Gallery</title>
+    </head>
+    <body>
+    </body>
+    <script src="${scriptSrc}" nonce="${nonce}"></script>
 </html>`
 }

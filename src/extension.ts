@@ -3,6 +3,17 @@ import * as vscode from "vscode"
 interface Theme {
   id?: string
   label: string
+  uiTheme: "vs" | "vs-dark"
+}
+
+interface ThemePredicateMap {
+  [type: string]: (theme: Theme) => boolean
+}
+
+const themePredicateMap = {
+  All: () => true,
+  Light: ({ uiTheme }: Theme) => uiTheme === "vs",
+  Dark: ({ uiTheme }: Theme) => uiTheme === "vs-dark",
 }
 
 let themeChangeInterval: NodeJS.Timeout | null = null
@@ -15,8 +26,14 @@ const themes: Theme[] = vscode.extensions.all
 const userSettings = vscode.workspace.getConfiguration()
 
 async function changeTheme() {
-  const themeIndex = Math.floor(Math.random() * Math.floor(themes.length))
-  const randomTheme = themes[themeIndex].label
+  const extensionConfig = getThemeConfig()
+  const themeType =
+    extensionConfig.get<"All" | "Light" | "Dark">("themeType") || "All"
+  const filteredThemes = themes.filter(themePredicateMap[themeType])
+  const themeIndex = Math.floor(
+    Math.random() * Math.floor(filteredThemes.length)
+  )
+  const randomTheme = filteredThemes[themeIndex].label
   await userSettings.update("workbench.colorTheme", randomTheme, true)
   statusBarItem!.text = randomTheme || ""
 }
@@ -25,7 +42,7 @@ function setThemeChangeInterval() {
   if (themeChangeInterval) {
     clearInterval(themeChangeInterval)
   }
-  const extensionConfig = vscode.workspace.getConfiguration("themeGallery")
+  const extensionConfig = getThemeConfig()
   const useInterval = extensionConfig.get<boolean>("interval")
   const intervalLength = extensionConfig.get<number>("intervalLength")
 
@@ -36,13 +53,16 @@ function setThemeChangeInterval() {
     }, intervalLengthMs)
   }
 }
+function getThemeConfig() {
+  return vscode.workspace.getConfiguration("themeGallery")
+}
+
 export function activate(context: vscode.ExtensionContext) {
   statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left
   )
   statusBarItem.text = userSettings.get<string>("workbench.colorTheme") || ""
   statusBarItem.show()
-  console.log("Text:", statusBarItem.text)
 
   context.subscriptions.push(statusBarItem)
   context.subscriptions.push(

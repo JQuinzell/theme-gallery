@@ -19,9 +19,11 @@ const themePredicateMap = {
 let themeChangeInterval: NodeJS.Timeout | null = null
 let statusBarItem: vscode.StatusBarItem | null = null
 
-const themes: Theme[] = vscode.extensions.all
-  .flatMap((ext) => ext.packageJSON?.contributes?.themes)
-  .filter(Boolean)
+function getThemes(): Theme[] {
+  return vscode.extensions.all
+    .flatMap((ext) => ext.packageJSON?.contributes?.themes)
+    .filter(Boolean)
+}
 
 const userSettings = vscode.workspace.getConfiguration()
 
@@ -29,11 +31,9 @@ async function changeTheme() {
   const extensionConfig = getThemeConfig()
   const themeType =
     extensionConfig.get<"All" | "Light" | "Dark">("themeType") || "All"
-  const filteredThemes = themes.filter(themePredicateMap[themeType])
-  const themeIndex = Math.floor(
-    Math.random() * Math.floor(filteredThemes.length)
-  )
-  const randomTheme = filteredThemes[themeIndex].label
+  const themes = getThemes().filter(themePredicateMap[themeType])
+  const themeIndex = Math.floor(Math.random() * Math.floor(themes.length))
+  const randomTheme = themes[themeIndex].label
   await userSettings.update("workbench.colorTheme", randomTheme, true)
   statusBarItem!.text = randomTheme || ""
 }

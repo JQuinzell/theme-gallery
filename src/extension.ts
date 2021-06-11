@@ -8,6 +8,7 @@ interface Theme {
 }
 
 let themeChangeInterval: NodeJS.Timeout | null = null
+let statusBarItem: vscode.StatusBarItem | null = null
 
 const themes: Theme[] = vscode.extensions.all
   .flatMap((ext) => ext.packageJSON?.contributes?.themes)
@@ -19,8 +20,7 @@ async function changeTheme() {
   const themeIndex = Math.floor(Math.random() * Math.floor(themes.length))
   const randomTheme = themes[themeIndex].label
   await userSettings.update("workbench.colorTheme", randomTheme, true)
-
-  vscode.window.showInformationMessage(`Switched to theme: ${randomTheme}!`)
+  statusBarItem!.text = randomTheme || ""
 }
 
 function setThemeChangeInterval() {
@@ -39,20 +39,26 @@ function setThemeChangeInterval() {
   }
 }
 export function activate(context: vscode.ExtensionContext) {
-  let disposable = vscode.commands.registerCommand(
-    "theme-gallery.randomize",
-    () => {
-      changeTheme()
-    }
+  statusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Left
   )
+  statusBarItem.text = userSettings.get<string>("workbench.colorTheme") || ""
+  statusBarItem.show()
+  console.log("Text:", statusBarItem.text)
 
-  context.subscriptions.push(disposable)
-
-  vscode.workspace.onDidChangeConfiguration((e) => {
-    if (e.affectsConfiguration("themeGallery")) {
-      setThemeChangeInterval()
-    }
-  })
+  context.subscriptions.push(statusBarItem)
+  context.subscriptions.push(
+    vscode.commands.registerCommand("theme-gallery.randomize", () => {
+      changeTheme()
+    })
+  )
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("themeGallery")) {
+        setThemeChangeInterval()
+      }
+    })
+  )
 
   setThemeChangeInterval()
 

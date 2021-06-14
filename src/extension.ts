@@ -104,7 +104,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.Uri.joinPath(context.extensionUri, "out/compiled", "main.js")
       )
 
-      panel.webview.postMessage({ themes })
+      panel.webview.postMessage({ themes: getThemes() })
 
       // Cleanup when webview closes
       // panel.onDidDispose(() => {}, null, context.subscriptions)

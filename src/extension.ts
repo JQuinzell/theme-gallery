@@ -6,10 +6,6 @@ interface Theme {
   uiTheme: "vs" | "vs-dark"
 }
 
-interface ThemePredicateMap {
-  [type: string]: (theme: Theme) => boolean
-}
-
 const themePredicateMap = {
   All: () => true,
   Light: ({ uiTheme }: Theme) => uiTheme === "vs",

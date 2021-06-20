@@ -19,10 +19,6 @@
       {
         "command": "theme-gallery.randomize",
         "title": "Theme Gallery: Randomize Theme"
-      },
-      {
-        "command": "theme-gallery.gallery",
-        "title": "Theme Gallery: Open Gallery"
       }
     ],
     "configuration": {
